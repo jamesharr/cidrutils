@@ -14,7 +14,7 @@ type PrefixTable interface {
 	MatchAll(ip net.IP) []Value
 	MatchLPM(ip net.IP) Value
 	MatchSPM(ip net.IP) Value
-	MatchExact(ip net.IP) (Value, error)
+	MatchExact(net net.IPNet) (Value, error)
 }
 
 // Used internally as a fixed-size array (instead of a slice)
