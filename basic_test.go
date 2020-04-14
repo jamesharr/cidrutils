@@ -17,6 +17,8 @@ func ip(input string) net.IP {
 }
 
 func TestMPT_basic(t *testing.T) {
+
+	// For Values stored in the PrefixTable we're using sentinel integers to ensure we get the correct field back
 	mpm := MapPrefixTable()
 
 	// Check to find non-specific matches
@@ -40,4 +42,7 @@ func TestMPT_basic(t *testing.T) {
 	// Add a subsequent v6 default and see if a v4 matches (it should)
 	mpm.Set(cidr("::/0"), 4)
 	assert.Equal(t, 4, mpm.MatchLPM(ip("::1")))
+
+	// Delete a CIDR that doesn't exist (this should not error out)
+	mpm.Delete(cidr("6.6.6.6/17"))
 }
