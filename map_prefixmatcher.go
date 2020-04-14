@@ -9,19 +9,19 @@ import (
 // MapPrefixTableStruct - asdf
 type MapPrefixTableStruct struct {
 	// maskUsed indicates whether a prefix length is used
-	maskUsed [128]bool
+	maskUsed [129]bool
 
 	// A reverse-sorted list of prefix lengths
 	maskList []int
 
 	// An array of prefixTables maps based on prefixLength
 	// prefixTable[myPrefixLength][netAddr] -> Value
-	prefixTable [128]map[ip6addr]Value
+	prefixTable [129]map[ip6addr]Value
 }
 
 // MapPrefixTable creates a PrefixMatcher based on a map data structure
 // TODO: When is this good to use?
-func MapPrefixTable() *MapPrefixTableStruct {
+func MapPrefixTable() PrefixTable {
 	return &MapPrefixTableStruct{}
 }
 
@@ -143,7 +143,7 @@ func castip6addr(ip net.IP) ip6addr {
 }
 
 // Create len2mask
-func makeLen2Mask() (rv [128]net.IPMask) {
+func makeLen2Mask() (rv [129]net.IPMask) {
 	for i := range rv {
 		rv[i] = net.CIDRMask(i, 128)
 	}
@@ -152,4 +152,4 @@ func makeLen2Mask() (rv [128]net.IPMask) {
 
 // Since the conversion between length and mask is going to be used often
 // this is a pre-initialized table of them.
-var len2mask [128]net.IPMask = makeLen2Mask()
+var len2mask [129]net.IPMask = makeLen2Mask()
