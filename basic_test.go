@@ -16,10 +16,16 @@ func ip(input string) net.IP {
 	return net.ParseIP(input)
 }
 
-func TestMPT_basic(t *testing.T) {
+// func TestLPM_trie(t *testing.T) {
+// 	testLPM(t, TriePrefixTable())
+// }
 
+func TestLPM_mpt(t *testing.T) {
+	testLPM(t, MapPrefixTable())
+}
+
+func testLPM(t *testing.T, mpm PrefixTable) {
 	// For Values stored in the PrefixTable we're using sentinel integers to ensure we get the correct field back
-	mpm := MapPrefixTable()
 
 	// Check to find non-specific matches
 	mpm.Set(cidr("1.2.3.0/24"), 1)
@@ -45,4 +51,8 @@ func TestMPT_basic(t *testing.T) {
 
 	// Delete a CIDR that doesn't exist (this should not error out)
 	mpm.Delete(cidr("6.6.6.6/17"))
+
+	// Add a specific route
+	mpm.Set(cidr("1.2.3.4/32"), 5)
+	assert.Equal(t, 5, mpm.MatchLPM(ip("1.2.3.4")))
 }

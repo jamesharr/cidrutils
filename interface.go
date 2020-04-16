@@ -7,7 +7,7 @@ import (
 // Value kept in the PrefixTable
 type Value interface{}
 
-// PrefixTable TODO docs
+// PrefixTable TODO docs. This API is unstable at the moment.
 type PrefixTable interface {
 	Set(net net.IPNet, v Value) error
 	Delete(net net.IPNet) error

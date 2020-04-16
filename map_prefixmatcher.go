@@ -6,8 +6,8 @@ import (
 	"sort"
 )
 
-// MapPrefixTableStruct - asdf
-type MapPrefixTableStruct struct {
+// mapPrefixTableStruct - asdf
+type mapPrefixTableStruct struct {
 	// maskUsed indicates whether a prefix length is used
 	maskUsed [129]bool
 
@@ -22,11 +22,11 @@ type MapPrefixTableStruct struct {
 // MapPrefixTable creates a PrefixMatcher based on a map data structure
 // TODO: When is this good to use?
 func MapPrefixTable() PrefixTable {
-	return &MapPrefixTableStruct{}
+	return &mapPrefixTableStruct{}
 }
 
 // Set a prefix
-func (mpm *MapPrefixTableStruct) Set(prefix net.IPNet, v Value) error {
+func (mpm *mapPrefixTableStruct) Set(prefix net.IPNet, v Value) error {
 	// Convert to 16 byte values
 	v6mask := castip6mask(prefix.Mask)
 	v6net := castip6addr(prefix.IP)
@@ -57,7 +57,7 @@ func (mpm *MapPrefixTableStruct) Set(prefix net.IPNet, v Value) error {
 }
 
 // Delete removes an entry
-func (mpm *MapPrefixTableStruct) Delete(prefix net.IPNet) error {
+func (mpm *mapPrefixTableStruct) Delete(prefix net.IPNet) error {
 	// Convert to 16 byte values
 	v6mask := castip6mask(prefix.Mask)
 	v6net := castip6addr(prefix.IP)
@@ -73,7 +73,7 @@ func (mpm *MapPrefixTableStruct) Delete(prefix net.IPNet) error {
 }
 
 // MatchAll returns all CIDRs matching a specific value
-func (mpm *MapPrefixTableStruct) MatchAll(ip net.IP) []Value {
+func (mpm *mapPrefixTableStruct) MatchAll(ip net.IP) []Value {
 	// v6net, maskLen, err
 
 	var k ip6addr
@@ -82,7 +82,7 @@ func (mpm *MapPrefixTableStruct) MatchAll(ip net.IP) []Value {
 }
 
 // MatchLPM performs a Longest Prefix Match, aka most specific prefix
-func (mpm *MapPrefixTableStruct) MatchLPM(ip net.IP) Value {
+func (mpm *mapPrefixTableStruct) MatchLPM(ip net.IP) Value {
 	ip = ip.To16()
 	for _, maskLen := range mpm.maskList {
 		prefix := ip.Mask(len2mask[maskLen])
@@ -96,7 +96,7 @@ func (mpm *MapPrefixTableStruct) MatchLPM(ip net.IP) Value {
 }
 
 // MatchSPM performs a Shortest Prefix Match, aka least specific prefix
-func (mpm *MapPrefixTableStruct) MatchSPM(ip net.IP) Value {
+func (mpm *mapPrefixTableStruct) MatchSPM(ip net.IP) Value {
 	ip = ip.To16()
 	for _, maskLen := range mpm.maskList {
 		prefix := ip.Mask(len2mask[maskLen])
@@ -110,16 +110,10 @@ func (mpm *MapPrefixTableStruct) MatchSPM(ip net.IP) Value {
 }
 
 // MatchExact returns the exact match or no match
-func (mpm *MapPrefixTableStruct) MatchExact(prefix net.IPNet) (Value, error) {
+func (mpm *mapPrefixTableStruct) MatchExact(prefix net.IPNet) (Value, error) {
 	// Convert to 16 byte values
-	v6mask := castip6mask(prefix.Mask)
 	v6net := castip6addr(prefix.IP)
-
-	maskLen, size := v6mask.Size()
-	if size != 128 {
-		return nil, fmt.Errorf(ErrNonCanonicalMask)
-	}
-
+	maskLen := calcMaskLen(prefix.Mask)
 	rv, _ := mpm.prefixTable[maskLen][v6net]
 	return rv, nil
 }
@@ -132,7 +126,18 @@ func castip6mask(mask net.IPMask) net.IPMask {
 	} else if bits == 128 {
 		return mask
 	}
-	panic("Mask size is neither 32 nor 128")
+	panic("Mask size is neither 32 nor 128 bits")
+}
+
+// Find the Mask Length
+func calcMaskLen(mask net.IPMask) int {
+	ones, bits := mask.Size()
+	if bits == 32 {
+		return ones + 96
+	} else if bits == 128 {
+		return ones
+	}
+	panic("Mask size is neither 32 nor 128 bits")
 }
 
 // Convert an IPMask to a 128 bit address
